@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type='text/javascript' src='https://www.youtube.com/player_api'></script>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js' type="text/javascript"></script>
+    <style>
+        h1{
+            font-size: 2em;
+            font-family: "TheCrew Sans Regular",serif;
+        }
+        h2{
+            font-size: 1.5em;
+            font-family: "TheCrew Sans Regular",serif;
+        }
+        td, iframe{
+            padding: 6px;
+        }
+        tr{
+            margin: 6px;
+        }
+        body { background-image: url("bgr.jpeg"); }
+        iframe {border: 0;}
+    </style>
+    <title>Radio NFSSoundtrack.com</title>
+</head>
+<body>
+<table>
+    <tr>
+        <th></th>
+        <th></th>
+    </tr>
+    <tr>
+        <td rowspan="4">
+            <img src="logo-nowe.png" alt="NFSSoundtrack.com">
+        </td>
+        <td>
+            <h1 id="band">KLTR</h1>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <h1 id="title">Levantate</h1>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <h1 id="game">Need for Speed Heat</h1>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <h2 id="additional"></h2>
+        </td>
+    </tr>
+</table>
+<h1 style="position: relative; alignment: center; font-size: 2em; padding: 6px">NFSSoundtrack.com</h1>
+<iframe id="player" width="256" height="144" src="http://www.youtube.com/embed/v4IiC2gI7Cc?autoplay=1&enablejsapi=1"
+        allowfullscreen style="position: absolute;"></iframe>
+<button id="change" onclick="firstMinusOneEvent=true; getNewSong();" style="position: relative; top: 160px;">Change</button>
+<script type="text/javascript">
+    var player;
+    var firstMinusOneEvent=true;
+    var playerOptions = {
+        videoId: 'v4IiC2gI7Cc',
+        events: {
+            'onStateChange': function (evt) {
+                console.log(evt.data);
+                if (evt.data === 0){
+                    console.log("Song finished");
+                    firstMinusOneEvent=true;
+                    getNewSong();
+                }
+                if (evt.data === -1){
+                    if (!firstMinusOneEvent){
+                        console.log("Second -1 event, getting new song");
+                        firstMinusOneEvent=true;
+                        getNewSong(); //means it cannot play it so we reset counter and get new song
+                    }
+                    else {
+                        firstMinusOneEvent=false; //so we handle first -1 event after song is loaded but not started
+                        console.log("First -1 event");
+                    }
+                }
+            }
+        }
+    };
+    player = onYouTubeIframeAPIReady("");
+
+    function getNewSong(){
+        $.ajax({
+            type: "GET",
+            contentType: "application/json",
+            dataType: "json",
+            url: "/newSong",
+            success: function (data, status) {
+                console.log(status);
+                console.log(data.src_id);
+                console.log(data);
+                playerOptions.videoId = data.src_id;
+                $("#band").text(data.band);
+                $("#title").text(data.title);
+                $("#game").text(data.prefix+" "+data.gameTitle);
+                $("#additional").text(data.description);
+                console.log(playerOptions);
+                player.loadVideoById({
+                    videoId:data.src_id
+                });
+                // player = null;
+                // player = new YT.Player('player', playerOptions);
+
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(xhr.status);
+                alert(thrownError);
+            }
+        });
+    }
+
+    function onYouTubeIframeAPIReady(String) {
+        player = new YT.Player('player', playerOptions);
+        console.log(player.toString());
+    }
+
+</script>
+</body>
+</html>
